@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cerdas Cermat Islam - Ultimate Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        /* Custom UI Effects */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .reward-glow {
+            animation: glowPulse 1.5s ease-in-out infinite alternate;
+            border-color: #10b981 !important;
+        }
+        @keyframes glowPulse {
+            from { box-shadow: 0 0 10px rgba(16, 185, 129, 0.2), inset 0 0 10px rgba(16, 185, 129, 0.1); }
+            to { box-shadow: 0 0 25px rgba(16, 185, 129, 0.6), inset 0 0 15px rgba(16, 185, 129, 0.3); }
+        }
+        .card-anim { animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .hidden-screen { display: none !important; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+/* ================= EFEK LEVEL UP BARU ================= */
+        .light-rays {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200vmax;
+            height: 200vmax;
+            transform: translate(-50%, -50%);
+            background: repeating-conic-gradient(
+                from 0deg,
+                transparent 0deg 15deg,
+                rgba(255, 215, 0, 0.3) 15deg 30deg
+            );
+            animation: spin-rays 20s linear infinite;
+            pointer-events: none;
+            z-index: 40;
+        }
+        @keyframes spin-rays {
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        @keyframes pop-in {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: pop-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+    </style>
+    <style type="text/tailwindcss">
+        @layer components {
+            .pill { @apply px-4 py-1.5 bg-slate-800 border border-emerald-500/30 text-emerald-400 rounded-full text-xs font-bold tracking-wider uppercase shadow-sm; }
+            .btn { @apply bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70; }
+            .btn-go { @apply bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold rounded-xl shadow-md shadow-emerald-900/50 transition-all active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70; }
+            
+            /* ---- CLASS GAME BARI ---- */
+            .btn-game { @apply bg-gradient-to-b from-emerald-500 to-emerald-700 text-white font-black rounded-2xl shadow-[0_6px_0_#047857,0_15px_20px_rgba(0,0,0,0.4)] active:shadow-[0_0px_0_#047857,0_0px_0_rgba(0,0,0,0.4)] active:translate-y-[6px] transition-all uppercase tracking-wider; }
+            .panel-game { @apply bg-slate-900/80 border-2 border-slate-700 rounded-3xl shadow-[inset_0_0_20px_rgba(0,0,0,0.5),0_10px_30px_rgba(0,0,0,0.5)] backdrop-blur-md; }
+            .badge-rank { @apply absolute -bottom-3 left-1/2 -translate-x-1/2 bg-gradient-to-b from-yellow-300 to-amber-600 text-slate-900 text-[10px] font-black px-3 py-1 rounded-full border-2 border-slate-900 shadow-lg uppercase whitespace-nowrap z-20; }
+            
+            .tile { @apply p-4 rounded-xl bg-slate-800/80 border border-slate-700 shadow-sm; }
+            .lbl { @apply text-slate-400 text-xs font-bold uppercase tracking-wider mb-1; }
+            .gold { @apply text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500; }
+            .info { @apply px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold transition-all hover:text-emerald-400 hover:border-emerald-500/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70; }
+            .back { @apply px-1 py-1 rounded-lg text-sm font-bold text-slate-400 transition-colors hover:text-emerald-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70; }
+            .fld { @apply flex items-center gap-3 p-4 rounded-xl bg-slate-800/80 border border-slate-700 shadow-sm transition-all focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500; }
+            .ib { @apply inline-flex items-center justify-center w-8 h-8 shrink-0 rounded-lg bg-slate-700 text-slate-300; }
+            .inp { @apply flex-1 min-w-0 bg-transparent font-medium text-slate-200 placeholder-slate-500 focus:outline-none; }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center py-8 px-4 relative overflow-x-hidden">
+
+    <!-- Efek Cahaya Latar Belakang -->
+    <div class="fixed top-[-10%] left-[-10%] w-96 h-96 bg-emerald-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+
+    <!-- ================= SCREEN LOGIN / REGISTER ================= -->
+    <div id="auth-screen" class="w-full max-w-sm relative z-10 mx-auto mt-10 md:mt-20">
+        <!-- Game Logo -->
+        <div class="text-center mb-10 animate-float relative">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-emerald-500/30 rounded-full blur-[40px] -z-10"></div>
+            <div class="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 border-4 border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.5)] mb-4 rotate-3 hover:rotate-0 transition-transform cursor-pointer">
+                <span class="text-5xl">🕋</span>
+            </div>
+            <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 drop-shadow-lg leading-none tracking-tight">ARENA<br><span class="text-emerald-400 text-5xl">ILMU</span></h1>
+            <p class="text-emerald-500 font-bold tracking-[0.2em] text-xs mt-3 uppercase">Cerdas Cermat Islam</p>
+        </div>
+
+        <div class="panel-game p-6 w-full card-anim relative">
+            <h2 class="text-center text-slate-400 text-xs font-bold uppercase tracking-widest mb-6">Player Authentication</h2>
+            
+            <div class="space-y-4 mb-6">
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">👤</span>
+                    <input type="text" id="username" placeholder="Player ID (Username)" class="w-full bg-slate-950/50 border-2 border-slate-700 rounded-xl py-4 pl-12 pr-4 text-white font-bold placeholder-slate-600 focus:border-emerald-500 focus:outline-none transition-colors">
+                </div>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">🔑</span>
+                    <input type="password" id="password" placeholder="Password" class="w-full bg-slate-950/50 border-2 border-slate-700 rounded-xl py-4 pl-12 pr-4 text-white font-bold placeholder-slate-600 focus:border-emerald-500 focus:outline-none transition-colors">
+                </div>
+            </div>
+
+            <div id="auth-msg" class="hidden mb-4" aria-live="polite"></div>
+
+            <div class="flex flex-col gap-4 mt-2">
+                <button onclick="login()" class="btn-game w-full py-4 text-lg">START GAME</button>
+                <div class="relative flex items-center py-2">
+                    <div class="flex-grow border-t border-slate-700"></div>
+                    <span class="flex-shrink-0 mx-4 text-slate-500 text-xs font-bold uppercase">Atau</span>
+                    <div class="flex-grow border-t border-slate-700"></div>
+                </div>
+                <button onclick="register()" class="w-full py-3 bg-slate-800 border-2 border-slate-700 text-slate-300 font-bold rounded-xl hover:bg-slate-700 hover:text-white transition-colors active:scale-95">Buat Akun Baru</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= SCREEN DASHBOARD ================= -->
+	<div id="dashboard-screen" class="w-full max-w-2xl hidden-screen relative z-10">        <!-- HEADER / PLAYER STATUS (RPG Style) -->
+        <div class="panel-game p-1 w-full mb-6 relative flex items-center justify-between">
+            <div class="flex items-center w-full bg-slate-800/50 rounded-[22px] p-4 relative overflow-hidden">
+                <div class="absolute -left-10 -top-10 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <!-- Avatar RPG -->
+                <div class="relative z-10 mr-5 shrink-0">
+                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-400 via-teal-500 to-slate-900 p-1 rotate-3 shadow-[0_0_15px_rgba(16,185,129,0.4)]">
+                        <div id="d-avatar" class="w-full h-full bg-slate-900 rounded-xl flex items-center justify-center text-4xl font-black text-white -rotate-3">Y</div>
+                    </div>
+                    <div id="d-level-badge" class="badge-rank">LV. 1</div>
+                </div>
+
+                <!-- Player Info -->
+                <div class="flex-1 relative z-10">
+                    <div class="flex justify-between items-start mb-1">
+                        <div>
+                            <h2 id="d-name" class="text-2xl font-black text-white leading-none tracking-tight">Player</h2>
+                            <p id="d-title" class="text-emerald-400 text-xs font-bold uppercase tracking-wider mt-1">Pencari Ilmu</p>
+                        </div>
+                        <button onclick="openSettings()" class="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center border border-slate-600 transition-colors shadow-sm" aria-label="Settings">
+                            ⚙️
+                        </button>
+                    </div>
+                    
+                    <!-- XP Bar (Mana Bar style) -->
+                    <div class="mt-3">
+                        <div class="flex justify-between items-end mb-1 px-1">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total EXP Progress</span>
+                            <span class="text-xs font-black text-yellow-400"><span id="d-xp-current-text">0</span> <span class="text-slate-500 mx-1">/</span> <span id="d-next-text" class="text-slate-500">300</span></span>
+                        </div>
+                        <div class="w-full bg-slate-950 rounded-full h-3 border border-slate-700 overflow-hidden relative">
+                            <div id="d-bar-main" class="bg-gradient-to-r from-emerald-600 to-emerald-400 h-full w-0 transition-all duration-1000 relative">
+                                <div class="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS (Mission Briefing Style) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full mb-8">            
+            <div class="panel-game p-3 flex flex-col items-center justify-center text-center">
+                <span class="text-2xl mb-1">🏅</span>
+                <h3 id="c-level" class="text-xl font-black text-white">1</h3>
+                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Level</p>
+            </div>
+            <div class="panel-game p-3 flex flex-col items-center justify-center text-center">
+                <span class="text-2xl mb-1">💎</span>
+                <h3 id="c-xp" class="text-xl font-black text-white">0</h3>
+                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Total XP</p>
+            </div>
+            <div class="panel-game p-3 flex flex-col items-center justify-center text-center">
+                <span class="text-2xl mb-1">📚</span>
+                <h3 id="c-bank" class="text-xl font-black text-white">0</h3>
+                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Question Bank</p>
+            </div>
+            <div class="panel-game p-3 flex flex-col items-center justify-center text-center">
+                <span class="text-2xl mb-1">🎯</span>
+                <h3 id="c-solved" class="text-xl font-black text-emerald-400">0%</h3>
+                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Progress</p>
+            </div>
+
+        </div>
+
+        <div class="flex justify-between items-center mb-4 px-2">
+            <h3 class="text-lg font-black text-white tracking-wider">SELECT MODE</h3>
+        </div>
+
+        <!-- GAME MODES -->
+        <div class="space-y-5 mb-8">
+            
+            <!-- Evolution Mode (Ranked Campaign) -->
+            <div class="relative bg-gradient-to-r from-emerald-900/80 to-slate-900 border-2 border-emerald-500/50 rounded-3xl p-1 overflow-hidden group">
+                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                <div class="bg-slate-900/90 rounded-[22px] p-6 flex flex-col sm:flex-row items-center gap-6 relative z-10">
+                    <div class="w-20 h-20 shrink-0 rounded-2xl bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center text-4xl shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                        🧬
+                    </div>
+                    <div class="flex-1 text-center sm:text-left">
+                        <div class="flex items-center justify-center sm:justify-start gap-2 mb-1">
+                            <span class="px-2 py-0.5 bg-emerald-500 text-white text-[10px] font-black rounded uppercase tracking-wider">Ranked</span>
+                            <button onclick="showInfo('evo')" class="text-x hover:text-emerald-400 transition-colors">Info  ⓘ</button>
+                        </div>
+                        <h2 class="text-2xl font-black text-white mb-1">Evolution Mode</h2>
+                        <p class="text-sm text-slate-400 font-medium mb-3">Tingkatkan Rank dan XP-mu</p>
+                        <p class="text-xs font-bold text-emerald-400 bg-emerald-950/50 inline-block px-3 py-1 rounded-full border border-emerald-900">Misi Tersedia: <span id="e-left" class="text-white">0</span></p>
+                    </div>
+                    <button onclick="startEvolution()" class="btn-game w-full sm:w-auto px-8 py-4 text-sm shrink-0">PLAY</button>
+                </div>
+            </div>
+
+            <!-- Specialization Mode (Training) -->
+            <div class="relative bg-gradient-to-r from-slate-800 to-slate-900 border-2 border-slate-700 rounded-3xl p-1">
+                <div class="bg-slate-900/90 rounded-[22px] p-5 sm:p-6 relative z-10">
+                    <div class="flex justify-between items-start mb-5">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-slate-800 border border-slate-600 flex items-center justify-center text-2xl">⚔️</div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h2 class="text-xl font-black text-white">Specialization Mode</h2>
+                                    <button onclick="showInfo('spec')" class="text-slate-400 hover:text-white transition-colors">Info  ⓘ</button>
+                                </div>
+                                <p class="text-xs text-slate-400 font-medium">Asah spesialisasi bidang keilmuanmu(No XP)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tempat Grid Kotak Training -->
+                    <div id="spec-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center pb-8">
+            <button onclick="logout()" class="text-[10px] text-slate-500 hover:text-red-500 font-bold uppercase tracking-widest transition-colors border border-slate-700 bg-slate-800/50 px-4 py-2 rounded-full">Ganti Akun / Logout</button>
+        </div>
+    </div>
+
+    <!-- ================= SCREEN PENGATURAN AKUN ================= -->
+    <div id="settings-screen" class="w-full max-w-2xl hidden-screen relative z-10">
+        <div class="mb-4"><button onclick="openDashboard()" class="back">← Dashboard</button></div>
+        <div class="glass-panel p-8 rounded-3xl w-full card-anim relative">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-700/50 pb-4"><span class="pill">Pengaturan Akun</span></div>
+            <h2 class="text-xl font-semibold leading-relaxed mb-8 text-slate-100">Ubah username atau password</h2>
+            <div id="set-fields" class="space-y-3"></div>
+            <div id="set-msg" class="hidden" aria-live="polite"></div>
+            <div class="flex gap-3 mt-8">
+                <button onclick="saveSettings()" class="btn-go flex-1 py-4">Simpan Perubahan</button>
+                <button onclick="openDashboard()" class="btn flex-1 py-4">Batal</button>
+            </div>
+        </div>
+    </div>
+<!-- ================= SCREEN SPECIALIZATION (LATIHAN PER BIDANG) ================= -->
+<div id="spec-screen" class="w-full max-w-2xl hidden-screen relative z-10">
+        <!-- Header dalam satu kartu -->
+        <div class="glass-panel p-6 rounded-3xl w-full mb-6 relative z-10">
+        <div class="flex items-center justify-between mb-4 relative z-10">
+            <button onclick="openDashboard()" class="back">← Dashboard</button>
+            <span class="pill">Tanpa XP</span>
+        </div>
+        <div class="flex items-center gap-4 relative z-10">
+            <div class="w-14 h-14 shrink-0 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 p-[2px] shadow-lg">
+                <div id="s-icon" class="w-full h-full bg-slate-900 rounded-full flex items-center justify-center text-2xl text-emerald-400"></div>
+            </div>
+            <div class="min-w-0 flex-1">
+                <h2 id="s-name" class="text-lg font-bold text-white leading-tight truncate"></h2>
+                <p id="s-count" class="text-slate-400 text-sm font-semibold"></p>
+            </div>
+            <h3 id="s-pct" class="text-2xl font-black gold">0%</h3>
+        </div>
+        
+        <!-- Progress Bar Spesialisasi -->
+        <div class="w-full bg-slate-800/80 rounded-full h-2.5 border border-slate-700/50 p-[1px] mt-4 relative z-10">
+            <div id="s-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-700 ease-out shadow-[0_0_10px_rgba(16,185,129,0.5)]" style="width: 0%"></div>
+        </div>
+        </div>
+        
+        <!-- Kartu soal: satu kolom di tengah, kartu Lanjut muncul di bawahnya -->
+        <div class="grid grid-cols-1 gap-6 w-full items-start">
+            
+            <div id="s-card" class="glass-panel p-8 rounded-3xl w-full card-anim relative">
+                <div class="flex justify-between items-center mb-6 border-b border-slate-700/50 pb-4">
+                    <span id="s-cat" class="pill"></span>
+                    <span id="s-diff"></span>
+                </div>
+                
+                <h2 id="s-q" class="text-xl font-semibold leading-relaxed mb-8 text-slate-100"></h2>
+                
+                <div id="s-opts" class="space-y-3"></div>
+                
+                <div id="s-exp" class="mt-6 hidden rounded-2xl overflow-hidden">
+                    <div class="p-5 bg-slate-800/80 border-l-4">
+                        <h3 id="s-exp-t" class="font-bold text-base mb-2"></h3>
+                        <p id="s-exp-p" class="text-sm text-slate-300 leading-relaxed"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Kecil Lanjut Spesialisasi (Kanan) -->
+            <div id="s-next-card" class="hidden glass-panel p-6 rounded-3xl w-full card-anim flex-col justify-center">
+                <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3 text-center">Navigasi</p>
+                <button id="s-next" onclick="specNext()" class="btn-game w-full py-4 text-xs font-black tracking-wider leading-relaxed shadow-lg">
+                    Lanjut ke Soal Berikutnya ➔
+                </button>
+            </div>
+
+        </div>
+    </div>
+	
+	<!-- ================= POP-UP PILIH KESULITAN (SPESIALISASI) ================= -->
+    <div id="diff-modal" class="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden-screen" onclick="if (event.target === this) closeDiff()">
+        <div role="dialog" class="glass-panel card-anim p-8 rounded-3xl w-full max-w-sm text-center">
+            <span class="pill mb-4 inline-block">Pilih Mode</span>
+            <h2 class="text-xl font-semibold leading-relaxed mb-6 text-slate-100">Tingkat Kesulitan</h2>
+            <div class="space-y-3">
+                <button onclick="startSpec(activeSpecIndex, 'Easy')" class="w-full text-left p-4 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 transition-all border border-slate-700 text-slate-200 font-bold shadow-sm active:scale-[0.98]">😊 Easy</button>
+                <button onclick="startSpec(activeSpecIndex, 'Medium')" class="w-full text-left p-4 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 transition-all border border-slate-700 text-amber-400 font-bold shadow-sm active:scale-[0.98]">🤔 Medium</button>
+                <button onclick="startSpec(activeSpecIndex, 'Hard')" class="w-full text-left p-4 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 transition-all border border-slate-700 text-orange-400 font-bold shadow-sm active:scale-[0.98]">🔥 Hard</button>
+                <button onclick="startSpec(activeSpecIndex, 'Very Hard')" class="w-full text-left p-4 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 transition-all border border-slate-700 text-red-400 font-bold shadow-sm active:scale-[0.98]">💀 Very Hard</button>
+                <button onclick="startSpec(activeSpecIndex, 'Acak')" class="w-full text-left p-4 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 transition-all border border-slate-700 text-emerald-400 font-bold shadow-sm active:scale-[0.98]">🎲 Acak (Semua)</button>
+            </div>
+            <button onclick="closeDiff()" class="btn w-full py-3 mt-6">Batal</button>
+        </div>
+    </div>
+
+    <!-- ================= POP-UP PENJELASAN MODE ================= -->
+    <div id="info-modal" class="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden-screen" onclick="if (event.target === this) closeInfo()">
+        <div role="dialog" aria-modal="true" aria-labelledby="info-title" class="glass-panel card-anim p-8 rounded-3xl w-full max-w-md max-h-[85vh] overflow-y-auto">
+            <span id="info-pill" class="pill"></span>
+            <h2 id="info-title" class="text-xl font-semibold leading-relaxed mt-5 mb-4 text-slate-100"></h2>
+            <ul id="info-list" class="space-y-3 text-sm text-slate-300 leading-relaxed"></ul>
+            <button id="info-ok" onclick="closeInfo()" class="btn-go w-full py-4 mt-8">Mengerti</button>
+        </div>
+    </div>
+
+    <!-- ================= SCREEN GAME ================= -->
+<div id="game-screen" class="w-full max-w-2xl hidden-screen flex-col items-center relative z-10">        <!-- Dashboard / Status Pemain (UI Baru yang Elegan) -->
+        <div class="w-full flex justify-end mb-3">
+            <button onclick="returnToDashboard()" class="back inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-800/80 px-4 py-2 hover:border-emerald-500/50 hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-emerald-400/70">
+                ← Kembali ke Dashboard
+            </button>
+        </div>
+        <div id="player-status" class="glass-panel p-5 rounded-2xl w-full mb-6 transition-all duration-500 relative overflow-hidden flex items-center justify-between border-slate-700">
+            
+            <!-- Aksen cahaya di dalam kartu -->
+            <div class="absolute -right-16 -top-16 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl"></div>
+
+            <!-- Info Pemain Kiri -->
+            <div class="flex items-center gap-4 relative z-10">
+                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 p-[2px] shadow-lg">
+                    <div class="w-full h-full bg-slate-900 rounded-full flex items-center justify-center text-xl font-black text-emerald-400" id="ui-avatar">Y</div>
+                </div>
+                <div>
+                    <h2 id="ui-username" class="text-lg font-bold text-white leading-tight">Player</h2>
+                    <p class="text-emerald-400 text-sm font-semibold flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span id="ui-title">Pencari Ilmu</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Info Level Kanan -->
+            <div class="text-right relative z-10">
+                <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Level <span id="ui-level" class="text-white text-base">1</span></p>
+                <div class="flex items-baseline justify-end gap-1">
+                    <h3 id="ui-xp" class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500">0</h3>
+                    <span class="text-sm font-bold text-yellow-500/70">XP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bar (Terpisah di bawah dashboard) -->
+        <div class="w-full mb-8">
+            <div class="flex justify-between text-xs text-slate-400 font-bold mb-2 px-1">
+                <span>XP Saat Ini: <span id="ui-xp-current" class="text-slate-200">0</span></span>
+                <span>Target: <span id="ui-xp-next" class="text-emerald-400">300</span></span>
+            </div>
+            <div class="w-full bg-slate-800/80 rounded-full h-2.5 border border-slate-700/50 p-[1px]">
+                <div id="ui-progress" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-700 ease-out shadow-[0_0_10px_rgba(16,185,129,0.5)]" style="width: 0%"></div>
+            </div>
+        </div>
+
+<!-- Area Kartu Soal -->
+<!-- Satu kolom: kartu soal di atas, kartu Lanjut muncul di bawahnya -->
+        <div class="grid grid-cols-1 gap-6 w-full items-start">
+            
+            <!-- Area Kartu Soal Utama (Lebar 2 Kolom) -->
+            <div id="card-container" class="glass-panel p-8 rounded-3xl w-full card-anim relative">
+                <div class="flex justify-between items-center mb-6 border-b border-slate-700/50 pb-4">
+                    <span id="q-category" class="px-4 py-1.5 bg-slate-800 border border-emerald-500/30 text-emerald-400 rounded-full text-xs font-bold tracking-wider uppercase shadow-sm">Kategori</span>
+                    <span id="q-difficulty" class="px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase shadow-sm">Hard (+150 XP)</span>
+                </div>
+                
+                <h2 id="q-text" class="text-xl font-semibold leading-relaxed mb-8 text-slate-100">Pertanyaan dimuat di sini...</h2>
+                
+                <div id="options-container" class="space-y-3">
+                    <!-- Opsi jawaban -->
+                </div>
+
+                <!-- Area Penjelasan (Tanpa tombol lanjut) -->
+                <div id="explanation-box" class="mt-6 hidden rounded-2xl overflow-hidden transition-all duration-300">
+                    <div class="p-5 bg-slate-800/80 border-l-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span id="exp-icon" class="text-lg">💡</span>
+                            <h3 id="explanation-title" class="font-bold text-base">Penjelasan:</h3>
+                        </div>
+                        <p id="q-explanation" class="text-sm text-slate-300 leading-relaxed">Isi penjelasan...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Kecil untuk Tombol Lanjut (Kanan - Mengisi Sisa Ruang) -->
+            <div id="next-card" class="hidden glass-panel p-6 rounded-3xl w-full card-anim flex-col justify-center">
+                <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3 text-center">Navigasi</p>
+                <button onclick="nextQuestion()" class="btn-game w-full py-4 text-xs font-black tracking-wider leading-relaxed shadow-lg">
+                    Lanjut ke Soal Berikutnya ➔
+                </button>
+            </div>
+            
+        </div>
+    </div>
+	<!-- ================= FULL SCREEN LEVEL UP MODAL ================= -->
+    <div id="level-up-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm overflow-hidden hidden-screen">
+        <div class="light-rays"></div>
+        <div class="relative z-10 flex flex-col items-center animate-pop">
+            <div class="w-32 h-32 md:w-48 md:h-48 rounded-full bg-gradient-to-tr from-yellow-400 via-orange-500 to-red-500 flex items-center justify-center shadow-[0_0_80px_rgba(255,165,0,0.8)] border-4 border-yellow-200 mb-6">
+                <span id="modal-level-text" class="text-6xl md:text-8xl font-black text-white drop-shadow-lg">2</span>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-4 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+                LEVEL UP!
+            </h1>
+            <p class="text-xl md:text-2xl font-bold text-white tracking-widest uppercase text-center">
+                Peningkatan Kapasitas Ilmu
+            </p>
+        </div>
+    </div>
+    <div id="level-up-choice-modal" class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden-screen">
+        <div role="dialog" aria-modal="true" aria-labelledby="level-up-choice-title" class="glass-panel card-anim p-8 rounded-3xl w-full max-w-md text-center">
+            <span class="text-5xl">🎉</span>
+            <h2 id="level-up-choice-title" class="text-2xl font-black text-white mt-4 mb-2">Selamat, Level <span id="choice-level-text"></span>!</h2>
+            <p class="text-sm text-slate-300 mb-6">Mau lanjut ke level berikutnya atau kembali ke dashboard?</p>
+            <div class="space-y-3">
+                <button onclick="continueAfterLevelUp()" class="btn-game w-full py-4">Lanjut ke Level Berikutnya</button>
+                <button onclick="returnToDashboard()" class="btn w-full py-4">Kembali ke Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="questions/hadits.js"></script>
+    <script src="questions/fiqih.js"></script>
+    <script src="questions/tarikh.js"></script>
+    <script src="questions/nahwu-shorof.js"></script>
+    <script src="questions/aqidah.js"></script>
+    <script src="questions/tajwid.js"></script>
+    <script src="questions/akhlak.js"></script>
+
+    <script>
+        // --- BANK SOAL ---
+        const bankSoal = window.questionBankParts
+            .sort((a, b) => a.index - b.index)
+            .map(({ question }) => question);
+
+        // --- SISTEM DB & LOGIC ---
+		let currentUser = localStorage.getItem('ccDB_session') || null;
+        // Menggunakan key yang SAMA dengan sebelumnya agar progres tidak hilang
+        let usersDB = JSON.parse(localStorage.getItem('ccDB_Ultimate')) || {};
+
+        function saveDB() { localStorage.setItem('ccDB_Ultimate', JSON.stringify(usersDB)); }
+        function showMsg(msg, isError = true) {
+            const msgBox = document.getElementById('auth-msg');
+            msgBox.innerText = msg;
+            msgBox.className = !msg ? "hidden" :
+                isError ? "mt-4 p-4 rounded-2xl bg-red-950/30 text-red-400 text-sm font-semibold shadow-[inset_4px_0_0_0_#ef4444]" :
+                          "mt-4 p-4 rounded-2xl bg-emerald-950/30 text-emerald-400 text-sm font-semibold shadow-[inset_4px_0_0_0_#10b981]";
+        }
+
+        function register() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            if (!user || !pass) return showMsg("Username dan password wajib diisi!");
+            if (usersDB[user]) return showMsg("Username sudah terpakai! Silakan Login.");
+
+            let initQueue = Array.from({length: bankSoal.length}, (_, i) => i);
+            usersDB[user] = { password: pass, level: 1, xp: 0, queue: initQueue, highestKnownLength: bankSoal.length, currentQuestion: null };
+            saveDB(); showMsg("Akun tercipta! Silakan klik Masuk.", false);
+        }
+
+		function login() {
+			const user = document.getElementById('username').value.trim();
+			const pass = document.getElementById('password').value.trim();
+			if (!user || !pass) return showMsg("Masukkan username dan password!");
+			if (!usersDB[user]) return showMsg("Username tidak ditemukan!");
+			if (usersDB[user].password !== pass) return showMsg("Password salah!");
+
+			currentUser = user; syncNewQuestions();
+			localStorage.setItem('ccDB_session', currentUser);  // ← TAMBAHKAN BARIS INI
+			openDashboard();
+		}
+		function logout() {
+			currentUser = null;
+			localStorage.removeItem('ccDB_session');   // ← TAMBAHKAN BARIS INI
+			document.getElementById('username').value = ""; document.getElementById('password').value = "";
+			showMsg("", false);
+			go('auth-screen');
+		}
+
+        function syncNewQuestions() {
+            let u = usersDB[currentUser];
+            if (bankSoal.length > u.highestKnownLength) {
+                for (let i = u.highestKnownLength; i < bankSoal.length; i++) {
+                    u.queue.push(i);
+                    if (u.evolutionCheckpoint && u.evolutionCheckpoint.level === u.level) {
+                        u.evolutionCheckpoint.queue.push(i);
+                    }
+                }
+                u.highestKnownLength = bankSoal.length; saveDB();
+            }
+        }
+
+        // --- GAMEPLAY ---
+        function getXPRequirement(level) { return level * 300; }
+        const totalPossibleXP = bankSoal.reduce((total, question) => total + question.xp, 0);
+
+        function saveEvolutionCheckpoint(user) {
+            user.evolutionCheckpoint = {
+                level: user.level,
+                xp: user.xp,
+                queue: user.queue.slice(),
+                currentQuestion: user.currentQuestion
+            };
+        }
+
+        function ensureEvolutionCheckpoint(user) {
+            if (!user.evolutionCheckpoint || user.evolutionCheckpoint.level !== user.level) {
+                saveEvolutionCheckpoint(user);
+                saveDB();
+            }
+        }
+
+        function renderQuestion() {
+            let u = usersDB[currentUser];
+
+            if (u.currentQuestion === null) {
+                if (u.queue.length === 0) {
+                    document.getElementById('q-text').innerText = "Kamu telah menyelesaikan semua soal! Tidak dapat menaikkan XP & Level sampai ada pembaruan bank soal.";
+                    document.getElementById('q-text').className = "text-xl font-bold text-emerald-400 text-center py-12";
+                    document.getElementById('options-container').innerHTML = "";
+                    document.getElementById('q-difficulty').style.display = "none";
+                    document.getElementById('q-category').style.display = "none";
+                    document.getElementById('explanation-box').classList.add('hidden');
+					document.getElementById('next-card').classList.replace('flex', 'hidden');
+                    return;
+                }
+                u.currentQuestion = u.queue.shift(); saveDB();
+            }
+
+            // Failsafe jika undefined
+            const q = bankSoal[u.currentQuestion];
+            if(!q) { u.currentQuestion = null; renderQuestion(); return; }
+            
+            document.getElementById('q-category').innerText = q.kategori;
+            document.getElementById('q-difficulty').innerText = `${q.tingkat} (+${q.xp} XP)`;
+            
+            document.getElementById('q-difficulty').style.display = "inline-block";
+            document.getElementById('q-category').style.display = "inline-block";
+            document.getElementById('q-text').className = "text-xl font-semibold leading-relaxed mb-8 text-slate-100";
+            
+            let diffColor = q.tingkat === "Medium" ? "bg-amber-900/50 text-amber-400 border border-amber-500/30" : 
+                            q.tingkat === "Hard" ? "bg-orange-900/50 text-orange-400 border border-orange-500/30" : 
+                            "bg-red-900/50 text-red-400 border border-red-500/30";
+            document.getElementById('q-difficulty').className = `px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase shadow-sm ${diffColor}`;
+
+            document.getElementById('q-text').innerText = q.soal;
+
+            const optionsBox = document.getElementById('options-container');
+            optionsBox.innerHTML = "";
+            q.opsi.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 transition-all border border-slate-700 focus:outline-none font-medium text-slate-200 hover:text-white hover:border-slate-500 shadow-sm active:scale-[0.99]";
+                btn.innerHTML = `<span class="inline-block w-8 h-8 text-center leading-8 rounded-lg bg-slate-700 text-slate-300 mr-3 text-sm">${String.fromCharCode(65 + index)}</span> ${opt}`;
+                btn.onclick = () => checkAnswer(index, btn);
+                optionsBox.appendChild(btn);
+            });
+
+            document.getElementById('explanation-box').classList.add('hidden');
+            
+            const card = document.getElementById('card-container');
+            card.classList.remove('card-anim'); void card.offsetWidth; card.classList.add('card-anim');
+        }
+
+			function checkAnswer(selectedIndex, btnElement) {
+						let u = usersDB[currentUser]; const q = bankSoal[u.currentQuestion];
+                        const levelAtQuestionStart = u.level;
+						const buttons = document.getElementById('options-container').children;
+						const expBox = document.getElementById('explanation-box');
+						const expTitle = document.getElementById('explanation-title');
+						const expIcon = document.getElementById('exp-icon');
+						
+						for (let b of buttons) { b.disabled = true; b.classList.add('opacity-50'); }
+						btnElement.classList.remove('opacity-50');
+
+						// Tambahkan tracker untuk dihitung Akurasinya
+						u.totalAnswered = (u.totalAnswered || 0) + 1;
+
+						if (selectedIndex === q.jawabanBenar) {
+							u.correctAnswers = (u.correctAnswers || 0) + 1; // Hitung jawaban benar
+							btnElement.classList.replace('bg-slate-800/80', 'bg-emerald-900/40');
+							btnElement.classList.replace('border-slate-700', 'border-emerald-500');
+							
+							expBox.querySelector('div').className = "p-5 bg-emerald-950/30 border-l-4 border-emerald-500";
+							expTitle.className = "font-bold text-emerald-400 text-lg";
+							expTitle.innerText = "Jawaban Tepat! (+ " + q.xp + " XP)";
+							expIcon.innerText = "✨";
+							addXP(q.xp);
+						} else {
+							btnElement.classList.replace('bg-slate-800/80', 'bg-red-900/40');
+							btnElement.classList.replace('border-slate-700', 'border-red-500');
+							
+							let correctBtn = buttons[q.jawabanBenar];
+							correctBtn.classList.remove('opacity-50');
+							correctBtn.classList.replace('bg-slate-800/80', 'bg-emerald-900/40');
+							correctBtn.classList.replace('border-slate-700', 'border-emerald-500');
+							
+							u.queue.push(u.currentQuestion); 
+							expBox.querySelector('div').className = "p-5 bg-red-950/30 border-l-4 border-red-500";
+							expTitle.className = "font-bold text-red-400 text-lg";
+							expTitle.innerText = "Kurang Tepat! (Soal akan diulang)";
+							expIcon.innerText = "🔄";
+						}
+
+						u.currentQuestion = null;
+                        if (u.level !== levelAtQuestionStart) saveEvolutionCheckpoint(u);
+                        saveDB();
+						document.getElementById('q-explanation').innerText = q.penjelasan;
+						expBox.classList.remove('hidden');
+						document.getElementById('next-card').classList.replace('hidden', 'flex');
+					}
+
+        function addXP(amount) {
+            let user = usersDB[currentUser]; user.xp += amount;
+            let requiredXP = getXPRequirement(user.level);
+            if (user.xp >= requiredXP) { user.xp -= requiredXP; user.level++; triggerLevelUp(); }
+            updateUI();
+        }
+
+	function triggerLevelUp() {
+            let user = usersDB[currentUser];
+            
+            // 1. Tampilkan Modal Full Screen & Update Angka Levelnya
+            const modal = document.getElementById('level-up-modal');
+            document.getElementById('modal-level-text').innerText = user.level;
+            modal.classList.remove('hidden-screen');
+
+            // 2. Efek Confetti
+            confetti({
+                particleCount: 150,
+                spread: 80,
+                origin: { y: 0.6 },
+                colors: ['#FFD700', '#FFA500', '#00FF00', '#00BFFF'],
+                zIndex: 9999
+            });
+
+            // 3. Efek Glow di Dashboard Status
+            const statusUI = document.getElementById('player-status');
+            statusUI.classList.add('reward-glow');
+
+            // Tampilkan pilihan setelah animasi perayaan selesai.
+            setTimeout(() => { 
+                modal.classList.add('hidden-screen'); 
+                statusUI.classList.remove('reward-glow');
+                $('choice-level-text').innerText = user.level;
+                $('level-up-choice-modal').classList.remove('hidden-screen');
+            }, 4000);
+        }
+
+        function continueAfterLevelUp() {
+            $('level-up-choice-modal').classList.add('hidden-screen');
+            nextQuestion();
+        }
+
+        function returnToDashboard() {
+            const user = usersDB[currentUser];
+            const checkpoint = user.evolutionCheckpoint;
+            if (checkpoint && checkpoint.level === user.level) {
+                user.xp = checkpoint.xp;
+                user.queue = checkpoint.queue.slice();
+                user.currentQuestion = checkpoint.currentQuestion;
+            }
+            saveDB();
+            $('level-up-choice-modal').classList.add('hidden-screen');
+            openDashboard();
+        }
+
+        function updateUI() {
+            let user = usersDB[currentUser];
+            document.getElementById('ui-level').innerText = user.level;
+            document.getElementById('ui-xp').innerText = user.xp;
+            
+            let reqXP = getXPRequirement(user.level);
+            document.getElementById('ui-xp-current').innerText = user.xp;
+            document.getElementById('ui-xp-next').innerText = reqXP;
+            
+            let percentage = (user.xp / reqXP) * 100;
+            document.getElementById('ui-progress').style.width = Math.min(percentage, 100) + '%';
+
+            const titles = ["Pencari Ilmu", "Pejuang Subuh", "Singa Podium", "Ahli Fiqih", "Mufassir Muda", "Mujtahid", "Mujaddid"];
+            document.getElementById('ui-title').innerText = titles[Math.min(user.level - 1, titles.length - 1)];
+        }
+        function nextQuestion() { renderQuestion(); }
+
+        // ===== NAVIGASI, DASHBOARD, MODE, PENGATURAN AKUN =====
+        const $ = id => document.getElementById(id);
+        const SCREENS = ['auth-screen', 'dashboard-screen', 'settings-screen', 'spec-screen', 'game-screen'];
+        function go(id) { SCREENS.forEach(s => $(s).classList.toggle('hidden-screen', s !== id)); window.scrollTo(0, 0); }
+
+        // Bidang diambil dari kategori soal ("Fiqih (Mawaris)" -> Fiqih, "Ilmu Hadits" -> Hadits)
+        const ICONS = { 'Aqidah': '✦', 'Akhlak': '☼', 'Fiqih': '☪', 'Tarikh': '⏳', 'Tajwid': '♫', 'Hadits': '📜', 'Nahwu Shorof': '🧠' };
+        const fieldOf = q => q.kategori.replace(/\s*\(.*\)\s*$/, '').replace(/^Ilmu\s+/, '');
+        const BIDANG = {};
+        bankSoal.forEach((q, i) => (BIDANG[fieldOf(q)] = BIDANG[fieldOf(q)] || []).push(i));
+        const FIELDS = [...Object.keys(ICONS).filter(f => BIDANG[f]), ...Object.keys(BIDANG).filter(f => !(f in ICONS))];
+        const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+        function msgBox(id, msg, ok) {
+            const b = $(id); b.innerText = msg;
+            b.className = !msg ? 'hidden' : 'mt-4 p-4 rounded-2xl text-sm font-semibold ' + (ok ? 'bg-emerald-950/30 text-emerald-400 shadow-[inset_4px_0_0_0_#10b981]' : 'bg-red-950/30 text-red-400 shadow-[inset_4px_0_0_0_#ef4444]');
+        }
+
+        // --- Dashboard ---
+        function openDashboard() {
+            const u = usersDB[currentUser];
+            const totalXPVal = (150 * u.level * (u.level - 1) + u.xp);
+            
+            // Hitung data baru
+            const solved = bankSoal.length - u.queue.length - (u.currentQuestion !== null ? 1 : 0);
+
+            updateUI();
+            
+            // Injeksi Card Profil Utama
+            $('d-avatar').innerText = '👑';
+            $('d-name').innerText = currentUser;
+            $('d-title').innerText = $('ui-title').innerText; 
+            $('d-level-badge').innerText = 'LV. ' + u.level;
+            $('d-xp-current-text').innerText = totalXPVal.toLocaleString('id-ID');
+            $('d-next-text').innerText = totalPossibleXP.toLocaleString('id-ID');
+            $('d-bar-main').style.width = (totalPossibleXP ? Math.min(totalXPVal / totalPossibleXP * 100, 100) : 0) + '%';
+            
+            // Injeksi 3 Card Kecil
+            $('c-level').innerText = u.level;
+            $('c-xp').innerText = totalXPVal.toLocaleString('id-ID');
+            $('c-solved').innerText = bankSoal.length ? Math.round(solved / bankSoal.length * 100) + '%' : '0%';
+            $('c-bank').innerText = bankSoal.length;
+            $('e-left').innerText = u.queue.length + (u.currentQuestion !== null ? 1 : 0);
+            
+            // Grid Specialization Mode (Training Room)
+            $('spec-grid').innerHTML = FIELDS.map((f, i) => {
+                const s = specSt(f, 'Acak'), n = BIDANG[f].length, pct = Math.round(s.pos / n * 100) || 0, done = s.pos >= n;
+                return `<div class="bg-slate-800/80 border-2 border-slate-700 hover:border-emerald-500/50 hover:bg-slate-800 rounded-xl p-3 cursor-pointer transition-all active:scale-95 group" onclick="openDiffModal(${i})">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs sm:text-sm font-black text-slate-300 group-hover:text-white truncate pr-2">${f}</span>
+                        <span class="text-lg opacity-80">${ICONS[f] || '✦'}</span>
+                    </div>
+                    <div class="w-full bg-slate-900 rounded-full h-1.5 mb-1 overflow-hidden border border-slate-700/50">
+                        <div class="bg-emerald-500 h-full" style="width: ${pct}%"></div>
+                    </div>
+                    <div class="text-[10px] text-right font-bold ${done ? 'text-emerald-400' : 'text-slate-500'}">${done ? 'CLEARED' : pct+'%'}</div>
+                </div>`;
+            }).join('');
+            go('dashboard-screen');
+        }
+
+        // --- Evolution Mode ---
+        function startEvolution() {
+            ensureEvolutionCheckpoint(usersDB[currentUser]);
+            $('ui-avatar').innerText = currentUser.charAt(0).toUpperCase(); $('ui-username').innerText = currentUser;
+            go('game-screen'); updateUI(); renderQuestion();
+        }
+
+        // --- Modal & Specialization Mode ---
+        let specF = null;
+        let specDiff = 'Acak';
+        let activeSpecIndex = null;
+        
+        function openDiffModal(i) { activeSpecIndex = i; $('diff-modal').classList.remove('hidden-screen'); }
+        function closeDiff() { $('diff-modal').classList.add('hidden-screen'); }
+
+        // Filter soal berdasarkan tingkat kesulitan
+        function getSpecIds(f, d) {
+            if (d === 'Acak') return BIDANG[f];
+            return BIDANG[f].filter(i => bankSoal[i].tingkat === d);
+        }
+
+        function specSt(f, d) {
+            const u = usersDB[currentUser]; u.spec = u.spec || {};
+            const key = f + '_' + d;
+            const ids = getSpecIds(f, d);
+            let s = u.spec[key];
+            if (!s || s.order.length !== ids.length || ids.some(i => !s.order.includes(i))) {   
+                const done = s ? s.order.slice(0, s.pos).filter(i => ids.includes(i)) : [];
+                s = u.spec[key] = { order: done.concat(shuffle(ids.filter(i => !done.includes(i)))), pos: done.length }; saveDB();
+            }
+            return s;
+        }
+        function specNew(f, d) {   
+            const ids = getSpecIds(f, d);
+            const s = specSt(f, d), last = s.order.length > 0 ? s.order[s.order.length - 1] : null;
+            s.order = shuffle(ids); s.pos = 0;
+            if (s.order.length > 1 && s.order[0] === last) [s.order[0], s.order[1]] = [s.order[1], s.order[0]];
+            saveDB();
+        }
+        function startSpec(i, diff) {
+            closeDiff();
+            specF = FIELDS[i]; specDiff = diff;
+            const ids = getSpecIds(specF, specDiff);
+            if(ids.length === 0) {
+                alert(`Soal ${specF} tingkat ${specDiff} belum tersedia! Silakan coba kesulitan lain.`);
+                return;
+            }
+            if (specSt(specF, specDiff).pos >= ids.length) specNew(specF, specDiff);
+            $('s-icon').innerText = ICONS[specF] || '✦'; 
+            $('s-name').innerText = specF + (specDiff !== 'Acak' ? ` (${specDiff})` : ''); 
+            go('spec-screen'); renderSpec();
+        }
+        function specBar() {
+            const s = specSt(specF, specDiff), p = Math.round(s.pos / s.order.length * 100);
+            $('s-pct').innerText = p + '%'; $('s-bar').style.width = p + '%';
+        }
+        function renderSpec() {
+            const s = specSt(specF, specDiff), q = bankSoal[s.order[s.pos]];
+            $('s-count').innerText = `Soal ${s.pos + 1} dari ${s.order.length}`; specBar();
+            $('s-cat').innerText = q.kategori; $('s-diff').innerText = q.tingkat;
+            $('s-diff').className = 'px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase shadow-sm ' + (q.tingkat === 'Medium' ? 'bg-amber-900/50 text-amber-400 border border-amber-500/30' : q.tingkat === 'Hard' ? 'bg-orange-900/50 text-orange-400 border border-orange-500/30' : 'bg-red-900/50 text-red-400 border border-red-500/30');
+            $('s-q').innerText = q.soal;
+            const box = $('s-opts'); box.innerHTML = '';
+            q.opsi.forEach((opt, k) => {
+                const b = document.createElement('button');
+                b.className = 'w-full text-left p-4 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 transition-all border border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 font-medium text-slate-200 hover:text-white hover:border-slate-500 shadow-sm active:scale-[0.99]';
+                b.innerHTML = `<span class="inline-block w-8 h-8 text-center leading-8 rounded-lg bg-slate-700 text-slate-300 mr-3 text-sm">${String.fromCharCode(65 + k)}</span> ${opt}`;
+                b.onclick = () => specAnswer(k, b); box.appendChild(b);
+            });
+            $('s-exp').classList.add('hidden');
+			$('s-next-card').classList.replace('flex', 'hidden');
+            const c = $('s-card'); c.classList.remove('card-anim'); void c.offsetWidth; c.classList.add('card-anim');
+        }
+        function specAnswer(k, btn) {
+            const s = specSt(specF, specDiff), q = bankSoal[s.order[s.pos]], bs = $('s-opts').children, good = k === q.jawabanBenar;
+            const mark = (b, ok) => { b.classList.remove('opacity-50'); b.classList.replace('bg-slate-800/80', ok ? 'bg-emerald-900/40' : 'bg-red-900/40'); b.classList.replace('border-slate-700', ok ? 'border-emerald-500' : 'border-red-500'); };
+            for (const b of bs) { b.disabled = true; b.classList.add('opacity-50'); }
+            mark(btn, good); if (!good) mark(bs[q.jawabanBenar], true);
+            s.pos++; saveDB(); specBar();
+            $('s-exp').firstElementChild.className = 'p-5 border-l-4 ' + (good ? 'bg-emerald-950/30 border-emerald-500' : 'bg-red-950/30 border-red-500');
+            $('s-exp-t').className = 'font-bold text-lg mb-3 ' + (good ? 'text-emerald-400' : 'text-red-400');
+            $('s-exp-t').innerText = good ? 'Jawaban Tepat!' : 'Kurang Tepat!'; $('s-exp-p').innerText = q.penjelasan;
+            $('s-next').innerText = s.pos >= s.order.length ? 'Putaran selesai! Mulai putaran baru ➔' : 'Lanjut ke Soal Berikutnya ➔';
+            $('s-exp').classList.remove('hidden');
+			$('s-next-card').classList.replace('hidden', 'flex');
+        }
+        function specNext() { 
+            const ids = getSpecIds(specF, specDiff);
+            if (specSt(specF, specDiff).pos >= ids.length) specNew(specF, specDiff); 
+            renderSpec(); 
+        }
+
+        // --- Pengaturan akun ---
+        const ICO = { user: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', lock: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' };
+        const fieldHtml = (id, type, ph, ico) => `<label class="fld"><span class="ib"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${ICO[ico]}"></path></svg></span><input type="${type}" id="${id}" aria-label="${ph}" placeholder="${ph}" class="inp"></label>`;
+        $('set-fields').innerHTML = fieldHtml('set-user', 'text', 'Username', 'user') + fieldHtml('set-cur', 'password', 'Password saat ini (wajib untuk menyimpan)', 'lock') + fieldHtml('set-new', 'password', 'Password baru (kosongkan jika tidak diganti)', 'lock') + fieldHtml('set-conf', 'password', 'Ulangi password baru', 'lock');
+
+        function openSettings() {
+            $('set-user').value = currentUser; ['set-cur', 'set-new', 'set-conf'].forEach(id => $(id).value = '');
+            msgBox('set-msg', '', true); go('settings-screen');
+        }
+        function saveSettings() {
+            const u = usersDB[currentUser], name = $('set-user').value.trim(), cur = $('set-cur').value.trim(), np = $('set-new').value.trim(), cf = $('set-conf').value.trim();
+            const err = m => msgBox('set-msg', m, false);
+            if (!cur) return err('Masukkan password saat ini untuk menyimpan perubahan.');
+            if (u.password !== cur) return err('Password saat ini salah!');
+            if (!name) return err('Username tidak boleh kosong.');
+            if (name !== currentUser && usersDB[name]) return err('Username sudah terpakai!');
+            if (np !== cf) return err('Konfirmasi password baru tidak cocok.');
+            if (name === currentUser && !np) return err('Belum ada yang diubah.');
+            if (np) u.password = np;
+			if (name !== currentUser) { 
+				usersDB[name] = u; 
+				delete usersDB[currentUser]; 
+				currentUser = name; 
+				localStorage.setItem('ccDB_session', currentUser);   // ← TAMBAHKAN
+			}			
+            saveDB(); ['set-cur', 'set-new', 'set-conf'].forEach(id => $(id).value = '');
+            msgBox('set-msg', 'Perubahan tersimpan.', true);
+        }
+
+        // --- Pop-up penjelasan mode ---
+        const INFO = {
+            evo: { pill: 'Evolution Mode', title: 'Naik level tanpa henti', items: [
+                'Jawaban benar memberi XP sesuai tingkat kesulitan soal, dan levelmu naik terus.',
+                'Soal datang dari berbagai tingkat kesulitan.',
+                'Soal yang sudah kamu jawab benar tidak akan muncul lagi, termasuk di level berikutnya.',
+                'Soal yang kamu jawab salah akan muncul kembali nanti, bisa di level berikutnya.',
+                'XP dan level tersimpan di profilmu.'] },
+            spec: { pill: 'Specialization Mode', title: 'Latihan fokus per bidang', items: [
+                'Pilih satu bidang, misalnya Tarikh. Soal hanya diambil dari bidang itu dan diacak.',
+                'Soal tidak berulang sampai semua soal berbeda di bidang itu sudah muncul. Setelah itu putaran baru dimulai dan soal diacak lagi.',
+                'Persentase di tiap bidang menunjukkan progres putaran saat ini.',
+                'Tidak ada XP dan level di mode ini, jadi profilmu tidak berubah.'] }
+        };
+        function showInfo(k) {
+            const d = INFO[k]; $('info-pill').innerText = d.pill; $('info-title').innerText = d.title;
+            $('info-list').innerHTML = d.items.map(t => `<li class="flex gap-3"><span class="mt-2 w-1.5 h-1.5 shrink-0 rounded-full bg-emerald-400"></span><span>${t}</span></li>`).join('');
+            $('info-modal').classList.remove('hidden-screen'); $('info-ok').focus();
+        }
+        function closeInfo() { $('info-modal').classList.add('hidden-screen'); }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInfo(); });
+				// --- AUTO-RESTORE SESSION ---
+		// Kalau sebelumnya sudah login, langsung masuk dashboard tanpa lewat login page
+		(function restoreSession() {
+			if (currentUser && usersDB[currentUser]) {
+				syncNewQuestions();
+				openDashboard();
+			} else {
+				// Kalau session tidak valid, bersihkan
+				currentUser = null;
+				localStorage.removeItem('ccDB_session');
+			}
+		})();
+    </script>
+</body>
+</html>

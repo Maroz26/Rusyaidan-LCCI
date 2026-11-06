@@ -1,0 +1,28 @@
+{
+    kategori: "Tarikh",
+    tingkat: "Hard",
+    xp: 150,
+    soal: "Khalifah Abdul Malik bin Marwan dikenal melakukan reformasi besar dalam administrasi Dinasti Umayyah. Salah satu reformasi yang menjadi tonggak penting proses Arabisasi pemerintahan adalah...",
+    opsi: [
+        "Menghapus seluruh jabatan gubernur dan menggantinya dengan dewan ulama",
+        "Menggantikan penggunaan bahasa Yunani dan Persia dalam sebagian administrasi negara dengan bahasa Arab serta melakukan reformasi mata uang Islam",
+        "Memindahkan seluruh pusat administrasi pemerintahan dari Damaskus ke Kufah",
+        "Menghapus sistem administrasi daerah dan menerapkan pemerintahan langsung dari Madinah"
+    ],
+    jawabanBenar: 1,
+    penjelasan: "Abdul Malik bin Marwan memperkuat sentralisasi pemerintahan melalui Arabisasi administrasi dan reformasi mata uang. Kebijakan ini mengurangi ketergantungan negara Umayyah terhadap sistem administratif Bizantium dan Persia serta memperkuat identitas politik kekhalifahan."
+},
+{
+    kategori: "Tarikh",
+    tingkat: "Hard",
+    xp: 150,
+    soal: "Dalam penaklukan Semenanjung Iberia pada tahun 711 M, pasukan Muslim berhasil mengalahkan kekuatan Visigoth dalam Pertempuran Guadalete. Siapakah panglima yang memimpin pasukan Muslim dalam pertempuran tersebut?",
+    opsi: [
+        "Musa bin Nushair",
+        "Abdurrahman Ad-Dakhil",
+        "Thariq bin Ziyad",
+        "Abdul Aziz bin Musa"
+    ],
+    jawabanBenar: 2,
+    penjelasan: "Thariq bin Ziyad memimpin pasukan Muslim menyeberangi selat menuju Semenanjung Iberia dan menghadapi pasukan Raja Roderic dalam Pertempuran Guadalete pada 711 M. Musa bin Nushair merupakan gubernur Ifriqiyah yang mengawasi ekspansi tersebut dan kemudian menyusul dengan pasukannya."
+}
